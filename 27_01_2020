@@ -1,0 +1,157 @@
+CREATE DATABASE dataia_Nancy;
+USE dataia_Nancy;
+CREATE TABLE dataia_Nancy
+(
+resilies INT,
+parcours INT,
+anciennete INT,
+demenagement INT,
+sinistre INT,
+devis INT, 
+desequip INT,
+revision INT,
+satisfaction INT
+);
+
+# Enlever la première ligne de BASE1.txt pour n'avoir que les valeurs.
+
+LOAD DATA LOCAL INFILE 'C:/Users/utilisateur/Desktop/SQL/BASE2.txt' INTO TABLE dataia_Nancy COLUMNS TERMINATED BY ';';
+
+#1 Afficher les 10 premières lignes de la table
+
+SELECT *
+FROM dataia_Nancy
+LIMIT 10;
+
+#2 Compter les lignes de la table
+
+SELECT COUNT(*)
+FROM dataia_Nancy;
+
+#4 Remplacer les 0 par 'non resilies' et les 1 par 'resilies' dans la colonne resilies
+
+ALTER TABLE dataia_Nancy
+MODIFY resilies VARCHAR(255);
+
+UPDATE dataia_Nancy
+SET resilies = (
+CASE
+WHEN resilies = '0' THEN 'non resilie'
+WHEN resilies = '1' THEN 'resilie'
+ELSE null
+END
+);
+
+/* ou
+
+-- SI NOUVELLE TABLE
+
+ALTER TABLE 
+ADD resiliation VARCHAR(55);
+UPDATE dataia_Nancy2 
+SET resiliation = (
+  CASE 
+    WHEN resilies = 1 THEN 'Résilié'
+    ELSE 'Non résilié'
+  END
+);
+SELECT * FROM dataia_Nancy2 LIMIT 10;
+
+-- SANS MODIFIER LA TABLE
+
+SELECT 
+    *, 
+    CASE resilies 
+        WHEN 0 THEN 'Non résilié' 
+        ELSE 'Résilié' 
+    END AS resiliation 
+FROM dataia_Nancy 
+LIMIT 10;
+
+*/
+
+#5 Combien de non résiliés avons-nous ?
+
+SELECT COUNT(*)
+FROM dataia_Nancy
+WHERE resilies = 'non resilies';
+
+#6 Quelle est l'ancienneté moyenne des individus avec 0 chiffre en décimal
+
+SELECT ROUND(AVG(anciennete), 0) AS 'Ancienneté moyenne'
+FROM dataia_Nancy;
+
+#7 Afficher le nombre d'individus en fonction de l'ancienneté et du sinistre
+
+SELECT anciennete, sinistre, COUNT(*)
+FROM dataia_Nancy
+GROUP BY anciennete, sinistre;
+
+#8 Afficher en pourcentage le nombre d'individus en fonction de l'ancienneté et du sinistre
+
+SELECT anciennete, sinistre, COUNT(*) AS 'Nombre individus', CONCAT(ROUND((100 * COUNT(*)/(SELECT COUNT(*) FROM dataia_Nancy)), 2), '%') AS 'Pourcentage'
+FROM dataia_Nancy
+GROUP BY anciennete, sinistre;
+
+#9 Parmi les non résilié combien d'individus ont un sinistre supérieur à la moyenne générale ?
+
+SELECT ROUND((SELECT AVG(sinistre) FROM dataia_Nancy), 2) AS 'Sinistre moyen', COUNT(*) AS 'Nombre de personnes'
+FROM dataia_Nancy
+WHERE resilies = 'non resilie' AND sinistre > (SELECT AVG(sinistre) FROM dataia_Nancy);
+
+
+SELECT sinistre, COUNT(*) AS 'Nombre de personnes'
+FROM dataia_Nancy
+WHERE resilies = 'non resilie'
+GROUP BY sinistre;
+
+#10 Créer en une seule requête la table "projetA" contenant les variables : resilies, parcours, anciennete et demenagement
+
+CREATE TABLE projetA
+(
+SELECT resilies, parcours, anciennete, demenagement FROM dataia_Nancy
+);
+
+#Créer aussi en une seule requête la table "projetB" contenant les variables : resilies, parcours, sinistre, devis, revision, satisfaction
+
+CREATE TABLE projetB
+(
+SELECT resilies, parcours, sinistre, devis, revision, satisfaction FROM dataia_Nancy
+);
+
+#11 Créer la table projetC à partir des tables projetA et projetB en utilisant dans un premier temps un « join » et dans un deuxieme temps « with »
+
+-- Créer des id
+
+ALTER TABLE projetA ADD id INT PRIMARY KEY NOT NULL AUTO_INCREMENT;
+ALTER TABLE projetB ADD id INT PRIMARY KEY NOT NULL AUTO_INCREMENT;
+
+--Créer la table
+
+CREATE TABLE projetC
+(
+SELECT * FROM projetB NATURAL JOIN projetA
+);
+
+-- Supprimer la colonne id de la table finale
+
+ALTER TABLE projetC
+DROP id
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
